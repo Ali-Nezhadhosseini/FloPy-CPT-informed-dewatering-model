@@ -60,19 +60,6 @@ The interpretation is simplified and intended for conceptual groundwater model b
 
 ---
 
-### Low-permeability zone in Layer 2
-
-![Low-K zone](figures/hydraulic_conductivity_layer2_low_k_zone.png)
-
-A schematic low-permeability zone was added in Layer 2 to represent a possible silt/clay lens or lower-permeability interval.
-
-```text
-Layer 2 background K = 3.0 m/day
-Low-K zone K         = 0.3 m/day
-```
-
----
-
 ### Simulated hydraulic head, Layer 3
 
 ![Hydraulic head Layer 3](figures/head_with_recharge_and_wells_layer3.png)
@@ -90,7 +77,6 @@ This project was designed to demonstrate practical groundwater model-building sk
 * interpreting simplified hydrostratigraphic layers
 * building a three-layer MODFLOW 6 groundwater-flow model with FloPy
 * assigning transparent CPT-index-based scenario K values
-* adding heterogeneity through a low-K zone
 * simulating dewatering wells
 * checking the water budget
 * calculating pumping-only drawdown
@@ -235,7 +221,6 @@ Main output figures:
 figures/pumping_only_drawdown_layer3.png
 figures/sensitivity_k_layer3_drawdown.png
 figures/cpt_profiles_with_layers.png
-figures/hydraulic_conductivity_layer2_low_k_zone.png
 figures/head_with_recharge_and_wells_layer3.png
 ```
 
@@ -251,7 +236,6 @@ Main limitations:
 * Hydraulic conductivity values are approximate scenario parameters.
 * K values are assigned from a relative CPT-index ranking, not from calibrated field permeability tests.
 * Boundary conditions are simplified.
-* The low-K zone is schematic.
 * No groundwater-level calibration is included.
 * No pumping-test or slug-test calibration is included.
 
