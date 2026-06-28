@@ -1,6 +1,8 @@
 # CPT-Informed MODFLOW 6 Dewatering Model using FloPy
 
-A compact groundwater-modeling portfolio project focused on **practical MODFLOW 6 model building with FloPy**. CPT data are used as supporting field information to build a simplified hydrostratigraphic concept, which is then translated into a three-layer dewatering model.
+A compact groundwater-modeling portfolio project focused on **practical MODFLOW 6 model building with FloPy**. CPT data are used to support a simplified hydrostratigraphic interpretation, define model layers, and assign approximate scenario-based hydraulic conductivity values for a three-layer dewatering model.
+
+This is a **conceptual portfolio model**, not a calibrated site model.
 
 ---
 
@@ -10,16 +12,18 @@ A compact groundwater-modeling portfolio project focused on **practical MODFLOW 
 
 ![Pumping-only drawdown](figures/pumping_only_drawdown_layer3.png)
 
-This result isolates the drawdown caused by pumping wells by comparing two simulations:
+The pumping-only drawdown was calculated by comparing two separate MODFLOW simulations:
 
 ```text
 drawdown = head_without_pumping - head_with_pumping
 ```
 
-The maximum pumping-only drawdown in the base case is approximately:
+This removes the effect of the regional hydraulic gradient and isolates the drawdown caused by the pumping wells.
+
+Base-case result:
 
 ```text
-0.87 m
+Maximum pumping-only drawdown ≈ 0.87 m
 ```
 
 ---
@@ -28,7 +32,7 @@ The maximum pumping-only drawdown in the base case is approximately:
 
 ![Sensitivity analysis](figures/sensitivity_k_layer3_drawdown.png)
 
-The sensitivity test shows that the simulated drawdown strongly depends on the hydraulic conductivity assigned to the deeper sandy layer.
+A sensitivity test was performed by changing the hydraulic conductivity of Layer 3. The result shows that the simulated drawdown is strongly controlled by the K value assigned to the deeper sandy layer.
 
 | Layer 3 K (m/day) | Maximum pumping-only drawdown (m) |
 | ----------------: | --------------------------------: |
@@ -36,13 +40,15 @@ The sensitivity test shows that the simulated drawdown strongly depends on the h
 |                10 |                              0.87 |
 |                20 |                              0.46 |
 
+Lower hydraulic conductivity leads to higher drawdown, while higher hydraulic conductivity leads to lower drawdown.
+
 ---
 
 ### CPT-informed hydrostratigraphic interpretation
 
 ![CPT profiles with interpreted layers](figures/cpt_profiles_with_layers.png)
 
-The CPT profiles were used to define a simplified three-layer conceptual model:
+The CPT profiles were used to define a simplified three-layer hydrostratigraphic concept:
 
 | Layer | Depth interval | Conceptual interpretation         |
 | ----: | -------------: | --------------------------------- |
@@ -50,13 +56,15 @@ The CPT profiles were used to define a simplified three-layer conceptual model:
 |     2 |         4–10 m | Intermediate sandy-silty material |
 |     3 |        10–19 m | Deeper, denser sandy layer        |
 
+The interpretation is simplified and intended for conceptual model building.
+
 ---
 
 ### Low-permeability zone in Layer 2
 
 ![Low-K zone](figures/hydraulic_conductivity_layer2_low_k_zone.png)
 
-A low-permeability zone was added in Layer 2 to represent a possible silt/clay lens.
+A schematic low-permeability zone was added in Layer 2 to represent a possible silt/clay lens or lower-permeability interval.
 
 ```text
 Layer 2 background K = 3.0 m/day
@@ -69,7 +77,7 @@ Low-K zone K         = 0.3 m/day
 
 ![Hydraulic head Layer 3](figures/head_with_recharge_and_wells_layer3.png)
 
-The model produces a regional hydraulic gradient from the left boundary to the right boundary, with local drawdown around the pumping wells.
+The simulated head field shows a regional gradient from the left constant-head boundary to the right constant-head boundary, with local drawdown around the pumping wells.
 
 ---
 
@@ -78,18 +86,50 @@ The model produces a regional hydraulic gradient from the left boundary to the r
 This project was designed to demonstrate practical groundwater model-building skills:
 
 * processing CPT data in Python
+* calculating CPT indicators such as qc, fs, and friction ratio
 * interpreting simplified hydrostratigraphic layers
-* building a three-layer MODFLOW 6 model with FloPy
-* assigning CPT-informed hydraulic conductivity values
+* building a three-layer MODFLOW 6 groundwater-flow model with FloPy
+* assigning transparent rule-based scenario K values
 * adding heterogeneity through a low-K zone
 * simulating dewatering wells
 * checking the water budget
-* separating pumping-only drawdown from the regional gradient
+* calculating pumping-only drawdown
 * testing sensitivity to hydraulic conductivity
 
 ---
 
-## Model setup
+## CPT-based hydraulic conductivity approach
+
+The hydraulic conductivity values are **not calibrated field K values** and are **not directly derived from a formal CPT-to-K correlation**.
+
+Instead, the model uses a transparent rule-based approach based on CPT indicators:
+
+```text
+higher qc + lower Rf  → more sandy / more permeable behavior
+lower qc or higher Rf → finer / less permeable behavior
+```
+
+A simple relative CPT permeability indicator is used in the script:
+
+```text
+K_index = qc / (Rf + 0.5)
+```
+
+This index is used only to support the conceptual assignment of layer-based K values.
+
+Base-case K values used in the model:
+
+| Layer | K (m/day) | Meaning                                |
+| ----: | --------: | -------------------------------------- |
+|     1 |         1 | lower-permeability shallow mixed layer |
+|     2 |         3 | intermediate sandy-silty layer         |
+|     3 |        10 | more permeable deeper sandy layer      |
+
+This makes the workflow CPT-informed, but still conceptual and scenario-based.
+
+---
+
+## MODFLOW model setup
 
 | Item                |                Value |
 | ------------------- | -------------------: |
@@ -106,27 +146,19 @@ This project was designed to demonstrate practical groundwater model-building sk
 | Right boundary head |                 -3 m |
 | Total pumping rate  |           180 m³/day |
 
----
+Three pumping wells are placed in Layer 3:
 
-## Hydraulic conductivity setup
-
-|   Layer | K (m/day) |
-| ------: | --------: |
-| Layer 1 |         1 |
-| Layer 2 |         3 |
-| Layer 3 |        10 |
-
-A schematic low-K zone was added inside Layer 2:
-
-```text
-K = 0.3 m/day
-```
+| Well | Pumping rate (m³/day) |
+| ---: | --------------------: |
+|    1 |                   -80 |
+|    2 |                   -60 |
+|    3 |                   -40 |
 
 ---
 
 ## Water budget check
 
-The final model budget confirms that pumping demand is mainly supplied by recharge and constant-head boundary inflow.
+The water budget confirms that the pumping demand is mainly supplied by recharge and constant-head boundary inflow.
 
 Example base-case budget:
 
@@ -136,7 +168,33 @@ Example base-case budget:
 | Recharge      |         +26.1 |
 | Wells         |        -180.0 |
 
-This confirms that the model is numerically consistent and that the pumping wells are balanced by boundary inflow and recharge.
+This confirms that the model response is numerically consistent for the conceptual dewatering scenario.
+
+---
+
+## How to run
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the main model script:
+
+```bash
+python 01_cpt_informed_modflow_model.py
+```
+
+The script tries to find the MODFLOW 6 executable in this order:
+
+```text
+1. MF6_EXE environment variable
+2. mf6 available in system PATH
+3. local Windows fallback path
+```
+
+If MODFLOW 6 is not found, install MODFLOW 6 and either add it to PATH or set the `MF6_EXE` environment variable.
 
 ---
 
@@ -154,6 +212,16 @@ README.md
 requirements.txt
 ```
 
+Main output figures:
+
+```text
+figures/pumping_only_drawdown_layer3.png
+figures/sensitivity_k_layer3_drawdown.png
+figures/cpt_profiles_with_layers.png
+figures/hydraulic_conductivity_layer2_low_k_zone.png
+figures/head_with_recharge_and_wells_layer3.png
+```
+
 ---
 
 ## Limitations
@@ -163,7 +231,8 @@ This is a conceptual portfolio model, not a calibrated site model.
 Main limitations:
 
 * CPT interpretation is simplified.
-* Hydraulic conductivity values are assumed and not calibrated.
+* Hydraulic conductivity values are approximate scenario parameters.
+* K values are not calibrated against pumping tests or groundwater-level observations.
 * Boundary conditions are simplified.
 * The low-K zone is schematic.
 * No field groundwater-level calibration is included.
@@ -172,4 +241,6 @@ Main limitations:
 
 ## Purpose
 
-The purpose of this project is to demonstrate a practical workflow for connecting CPT-based conceptual interpretation with MODFLOW 6 groundwater-flow and dewatering modeling using Python and FloPy.
+The purpose of this project is to demonstrate a practical workflow for connecting CPT-supported hydrostratigraphic interpretation with MODFLOW 6 groundwater-flow and dewatering modeling using Python and FloPy.
+
+The emphasis is on practical model building, transparent assumptions, water-budget checking, pumping-only drawdown analysis, and sensitivity testing.
