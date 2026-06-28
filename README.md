@@ -98,6 +98,23 @@ This project was designed to demonstrate practical groundwater model-building sk
 
 ---
 
+## Data source
+
+The CPT data used in this project are based on publicly available USGS cone penetration test data from the Pajaro site.
+
+The raw CPT files were processed in Python to extract and clean the main CPT parameters used in this conceptual workflow:
+
+```text
+depth
+cone resistance qc
+sleeve friction fs
+friction ratio Rf
+```
+
+The data are used only as supporting information for simplified hydrostratigraphic interpretation and conceptual MODFLOW model building. No proprietary or confidential project data are used.
+
+---
+
 ## CPT-based hydraulic conductivity approach
 
 The hydraulic conductivity values are **not calibrated field K values** and are **not directly derived from a formal CPT-to-K correlation**.
