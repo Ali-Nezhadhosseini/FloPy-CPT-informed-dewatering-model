@@ -88,9 +88,9 @@ DELR = LENGTH_X / NCOL
 DELC = LENGTH_Y / NROW
 
 # Layer elevations based on simplified CPT interpretation
-# Layer 1: 0–4 m depth
-# Layer 2: 4–10 m depth
-# Layer 3: 10–19 m depth
+# Layer 1: 0-4 m depth
+# Layer 2: 4-10 m depth
+# Layer 3: 10-19 m depth
 TOP = 0.0
 BOTM = [-4.0, -10.0, -19.0]
 
@@ -156,9 +156,6 @@ def load_cpt_data(cpt_csv):
     cpt = cpt[(cpt["qc_MPa"] > 0) & (cpt["fs_kPa"] >= 0)]
 
     return cpt
-
-
-
 
 
 def get_layer_k_values(cpt):
@@ -267,13 +264,13 @@ def get_layer_k_values(cpt):
     return k_values[0], k_values[1], k_values[2]
 
 
-
 def build_k_array(k_layer1, k_layer2, k_layer3):
     """
     Build 3D hydraulic conductivity array.
 
-    A schematic low-K zone is added in Layer 2 to represent
-    a possible silt/clay lens or lower-permeability interval.
+    Each model layer is assigned one homogeneous scenario K value
+    derived from the CPT-index ranking. No artificial heterogeneity
+    is added, so all K values trace back to the CPT interpretation.
     """
 
     k_array = np.zeros((NLAY, NROW, NCOL))
@@ -281,9 +278,6 @@ def build_k_array(k_layer1, k_layer2, k_layer3):
     k_array[0, :, :] = k_layer1
     k_array[1, :, :] = k_layer2
     k_array[2, :, :] = k_layer3
-
-    # Schematic low-K zone in Layer 2
-    k_array[1, 20:40, 20:40] = 0.3
 
     return k_array
 
@@ -485,30 +479,6 @@ def plot_head_layer3(head_with_pumping):
     print("Head plot saved:", plot_path)
 
 
-def plot_k_layer2(k_array):
-    """Plot hydraulic conductivity distribution in Layer 2."""
-
-    plt.figure(figsize=(7, 6))
-
-    image = plt.imshow(
-        k_array[1],
-        extent=[0, LENGTH_X, 0, LENGTH_Y],
-        origin="lower",
-    )
-
-    plt.colorbar(image, label="Hydraulic conductivity K (m/day)")
-    plt.title("Hydraulic Conductivity Distribution - Layer 2")
-    plt.xlabel("x (m)")
-    plt.ylabel("y (m)")
-    plt.tight_layout()
-
-    plot_path = FIGURES_DIR / "hydraulic_conductivity_layer2_low_k_zone.png"
-    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
-    plt.show()
-
-    print("K distribution plot saved:", plot_path)
-
-
 def plot_pumping_only_drawdown(head_no_pumping, head_with_pumping):
     """
     Plot pumping-only drawdown.
@@ -618,7 +588,6 @@ def main():
     print(f"Layer 1 K: {k_layer1:.2f} m/day")
     print(f"Layer 2 K: {k_layer2:.2f} m/day")
     print(f"Layer 3 K: {k_layer3:.2f} m/day")
-    print("Layer 2 low-K zone: 0.30 m/day")
 
     k_array = build_k_array(
         k_layer1=k_layer1,
@@ -641,7 +610,6 @@ def main():
 
     # Create final outputs
     plot_head_layer3(head_with_pumping)
-    plot_k_layer2(k_array)
     plot_pumping_only_drawdown(head_no_pumping, head_with_pumping)
     print_water_budget(budget_with_pumping)
 
