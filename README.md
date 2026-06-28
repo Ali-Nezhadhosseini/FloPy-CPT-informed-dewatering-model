@@ -1,6 +1,6 @@
 # CPT-Informed MODFLOW 6 Dewatering Model using FloPy
 
-A compact groundwater-modeling portfolio project focused on **practical MODFLOW 6 model building with FloPy**. CPT data are used to support a simplified hydrostratigraphic interpretation, define model layers, and assign approximate scenario-based hydraulic conductivity values for a three-layer dewatering model.
+A compact groundwater-modeling portfolio project focused on **practical MODFLOW 6 model building with FloPy**. CPT data are used to support a simplified hydrostratigraphic interpretation, define model layers, and assign transparent scenario-based hydraulic conductivity values for a three-layer dewatering model.
 
 This is a **conceptual portfolio model**, not a calibrated site model.
 
@@ -56,7 +56,7 @@ The CPT profiles were used to define a simplified three-layer hydrostratigraphic
 |     2 |         4–10 m | Intermediate sandy-silty material |
 |     3 |        10–19 m | Deeper, denser sandy layer        |
 
-The interpretation is simplified and intended for conceptual model building.
+The interpretation is simplified and intended for conceptual groundwater model building.
 
 ---
 
@@ -86,10 +86,10 @@ The simulated head field shows a regional gradient from the left constant-head b
 This project was designed to demonstrate practical groundwater model-building skills:
 
 * processing CPT data in Python
-* calculating CPT indicators such as qc, fs, and friction ratio
+* calculating CPT indicators such as cone resistance `qc`, sleeve friction `fs`, and friction ratio `Rf`
 * interpreting simplified hydrostratigraphic layers
 * building a three-layer MODFLOW 6 groundwater-flow model with FloPy
-* assigning transparent rule-based scenario K values
+* assigning transparent CPT-index-based scenario K values
 * adding heterogeneity through a low-K zone
 * simulating dewatering wells
 * checking the water budget
@@ -102,30 +102,30 @@ This project was designed to demonstrate practical groundwater model-building sk
 
 The hydraulic conductivity values are **not calibrated field K values** and are **not directly derived from a formal CPT-to-K correlation**.
 
-Instead, the model uses a transparent rule-based approach based on CPT indicators:
+Instead, the model uses a transparent CPT-index-based ranking approach. For each interpreted layer, the median cone resistance `qc` and median friction ratio `Rf` are calculated. Then a relative CPT permeability indicator is computed:
+
+```text
+K_index = median(qc / (Rf + 0.5))
+```
+
+The logic is:
 
 ```text
 higher qc + lower Rf  → more sandy / more permeable behavior
 lower qc or higher Rf → finer / less permeable behavior
 ```
 
-A simple relative CPT permeability indicator is used in the script:
+The three layers are ranked by `K_index`, and scenario K values are assigned as low, medium, and high permeability classes.
 
-```text
-K_index = qc / (Rf + 0.5)
-```
+Base-case CPT-index results:
 
-This index is used only to support the conceptual assignment of layer-based K values.
+| Layer | qc median (MPa) | Rf median (%) | K_index | Assigned K (m/day) |
+| ----: | --------------: | ------------: | ------: | -----------------: |
+|     1 |            2.11 |          1.06 |    1.52 |                  1 |
+|     2 |            5.50 |          0.60 |    5.36 |                  3 |
+|     3 |            7.32 |          0.65 |    7.23 |                 10 |
 
-Base-case K values used in the model:
-
-| Layer | K (m/day) | Meaning                                |
-| ----: | --------: | -------------------------------------- |
-|     1 |         1 | lower-permeability shallow mixed layer |
-|     2 |         3 | intermediate sandy-silty layer         |
-|     3 |        10 | more permeable deeper sandy layer      |
-
-This makes the workflow CPT-informed, but still conceptual and scenario-based.
+This makes the workflow CPT-informed, while keeping the hydraulic conductivity values transparent, scenario-based, and suitable for conceptual MODFLOW model building.
 
 ---
 
@@ -232,10 +232,11 @@ Main limitations:
 
 * CPT interpretation is simplified.
 * Hydraulic conductivity values are approximate scenario parameters.
-* K values are not calibrated against pumping tests or groundwater-level observations.
+* K values are assigned from a relative CPT-index ranking, not from calibrated field permeability tests.
 * Boundary conditions are simplified.
 * The low-K zone is schematic.
-* No field groundwater-level calibration is included.
+* No groundwater-level calibration is included.
+* No pumping-test or slug-test calibration is included.
 
 ---
 
